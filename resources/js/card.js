@@ -54,7 +54,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	/*-- Cover | Sleeve --*/
 
-	function scaleCoverSleeves() {
+	/*
+|--------------------------------------------------------------------------
+| Cover Sleeve Configuration
+|--------------------------------------------------------------------------
+|
+| The sleeve size is calculated ONCE when the invitation loads.
+|
+| This is intentional.
+|
+| Mobile browser address bars can change the visual viewport height while
+| scrolling. We do NOT want that to resize the cover.
+|
+|--------------------------------------------------------------------------
+*/
+
+	let cover_scale = 1;
+	let cover_design_width = 0;
+	let cover_design_height = 0;
+
+	/*
+|--------------------------------------------------------------------------
+| Initialise Cover Sleeves
+|--------------------------------------------------------------------------
+*/
+
+	function initialiseCoverSleeves() {
 		if (!cover_sleeves) {
 			return;
 		}
@@ -65,50 +90,160 @@ document.addEventListener('DOMContentLoaded', () => {
 			return;
 		}
 
-		let designWidth = 0;
-		let designHeight = 0;
+		/*
+    |--------------------------------------------------------------------------
+    | Wait Until Sleeve Media Is Ready
+    |--------------------------------------------------------------------------
+    */
 
-		sleeves.forEach((sleeve) => {
-			let mediaWidth;
-			let mediaHeight;
+		function calculateCover() {
+			cover_design_width = 0;
+			cover_design_height = 0;
 
-			if (sleeve.tagName === "VIDEO") {
-				mediaWidth = sleeve.videoWidth;
-				mediaHeight = sleeve.videoHeight;
-			} else {
-				mediaWidth = sleeve.naturalWidth;
-				mediaHeight = sleeve.naturalHeight;
-			}
+			/*
+        |--------------------------------------------------------------------------
+        | Get Natural Dimensions
+        |--------------------------------------------------------------------------
+        */
 
-			if (!mediaWidth || !mediaHeight) {
+			sleeves.forEach((sleeve) => {
+				let media_width = 0;
+				let media_height = 0;
+
+				if (sleeve.tagName === "VIDEO") {
+					media_width = sleeve.videoWidth;
+					media_height = sleeve.videoHeight;
+				} else {
+					media_width = sleeve.naturalWidth;
+					media_height = sleeve.naturalHeight;
+				}
+
+				/*
+            |--------------------------------------------------------------------------
+            | Ignore Media That Is Not Ready
+            |--------------------------------------------------------------------------
+            */
+
+				if (!media_width || !media_height) {
+					return;
+				}
+
+				cover_design_width += media_width;
+
+				cover_design_height = Math.max(cover_design_height, media_height);
+			});
+
+			/*
+        |--------------------------------------------------------------------------
+        | Safety Check
+        |--------------------------------------------------------------------------
+        */
+
+			if (!cover_design_width || !cover_design_height) {
 				return;
 			}
 
-			designWidth += mediaWidth;
-			designHeight = Math.max(designHeight, mediaHeight);
+			/*
+        |--------------------------------------------------------------------------
+        | Capture Initial Viewport
+        |--------------------------------------------------------------------------
+        |
+        | IMPORTANT:
+        |
+        | These values are captured ONCE.
+        |
+        | We deliberately do not listen to resize events afterward.
+        |
+        */
+
+			const viewport_width = document.documentElement.clientWidth;
+
+			const viewport_height = window.innerHeight;
+
+			/*
+        |--------------------------------------------------------------------------
+        | Calculate Cover Scale
+        |--------------------------------------------------------------------------
+        |
+        | Mobile:
+        |
+        | The complete sleeve design fits the initial viewport height.
+        |
+        | Desktop:
+        |
+        | The complete sleeve design fits the initial viewport width.
+        |
+        */
+
+			if (viewport_width <= 768) {
+				cover_scale = viewport_height / cover_design_height;
+			} else {
+				cover_scale = viewport_width / cover_design_width;
+			}
+
+			/*
+        |--------------------------------------------------------------------------
+        | Store Scale
+        |--------------------------------------------------------------------------
+        */
+
+			cover_sleeves.style.setProperty("--cover-scale", cover_scale);
+
+			/*
+        |--------------------------------------------------------------------------
+        | Apply Scale
+        |--------------------------------------------------------------------------
+        */
+
+			cover_sleeves.style.transform = `translate(-50%, -50%) scale(${cover_scale})`;
+		}
+
+		/*
+    |--------------------------------------------------------------------------
+    | Check Media Readiness
+    |--------------------------------------------------------------------------
+    */
+
+		let media_ready = true;
+
+		sleeves.forEach((sleeve) => {
+			if (sleeve.tagName === "VIDEO") {
+				if (!sleeve.videoWidth || !sleeve.videoHeight) {
+					media_ready = false;
+
+					sleeve.addEventListener("loadedmetadata", calculateCover, {
+						once: true,
+					});
+				}
+			} else {
+				if (!sleeve.complete || !sleeve.naturalWidth || !sleeve.naturalHeight) {
+					media_ready = false;
+
+					sleeve.addEventListener("load", calculateCover, {
+						once: true,
+					});
+				}
+			}
 		});
 
-		if (!designWidth || !designHeight) {
-			return;
+		/*
+    |--------------------------------------------------------------------------
+    | Calculate Immediately If Ready
+    |--------------------------------------------------------------------------
+    */
+
+		if (media_ready) {
+			calculateCover();
 		}
-
-		const viewportWidth = window.innerWidth;
-		const viewportHeight = window.innerHeight;
-
-		let scale;
-
-		if (viewportWidth <= 768) {
-			scale = viewportHeight / designHeight;
-		} else {
-			scale = viewportWidth / designWidth;
-		}
-
-		cover_sleeves.style.transform = `translate(-50%, -50%) scale(${scale})`;
-		cover_sleeves.style.setProperty("--landing-scale", scale);
 	}
 
-	scaleCoverSleeves();
-	window.addEventListener("resize", scaleCoverSleeves);
+	/*
+|--------------------------------------------------------------------------
+| Initialise Once
+|--------------------------------------------------------------------------
+*/
+
+	initialiseCoverSleeves();
 
 	/*-- Cover | Hint --*/
 
@@ -263,179 +398,113 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	/*-- Card | Background --*/
 
-/*
+	/*
 |--------------------------------------------------------------------------
 | Background Video Configuration
 |--------------------------------------------------------------------------
 */
 
-const BACKGROUND_TILE_OVERLAP = 2;
+	const BACKGROUND_TILE_OVERLAP = 2;
 
-
-/*
+	/*
 |--------------------------------------------------------------------------
 | Create Background Video Tile
 |--------------------------------------------------------------------------
 */
 
-function createBackgroundVideoTile(
-    top,
-    height
-) {
+	function createBackgroundVideoTile(top, height) {
+		const tile = document.createElement("div");
 
-    const tile =
-        document.createElement('div');
+		tile.className = "card-background-tile";
 
+		tile.style.top = `${top}px`;
 
-    tile.className =
-        'card-background-tile';
+		tile.style.height = `${height + BACKGROUND_TILE_OVERLAP}px`;
 
+		const video = document.createElement("video");
 
-    tile.style.top =
-        `${top}px`;
+		video.src = card_background_src;
 
+		video.autoplay = true;
 
-    tile.style.height =
-        `${height + BACKGROUND_TILE_OVERLAP}px`;
+		video.loop = true;
 
+		video.muted = true;
 
-    const video =
-        document.createElement('video');
+		video.playsInline = true;
 
+		video.preload = "auto";
 
-    video.src =
-        card_background_src;
+		video.setAttribute("aria-hidden", "true");
 
+		tile.appendChild(video);
 
-    video.autoplay =
-        true;
+		card_background.appendChild(tile);
 
-    video.loop =
-        true;
-
-    video.muted =
-        true;
-
-    video.playsInline =
-        true;
-
-    video.preload =
-        'auto';
-
-
-    video.setAttribute(
-        'aria-hidden',
-        'true'
-    );
-
-
-    tile.appendChild(
-        video
-    );
-
-
-    card_background.appendChild(
-        tile
-    );
-
-
-    video.play().catch(() => {
-        /*
+		video.play().catch(() => {
+			/*
         | Browser may delay autoplay until interaction.
         */
-    });
+		});
 
+		return tile;
+	}
 
-    return tile;
-}
-
-
-/*
+	/*
 |--------------------------------------------------------------------------
 | Create Background Video Tiles
 |--------------------------------------------------------------------------
 */
 
-function createBackgroundVideoTiles() {
+	function createBackgroundVideoTiles() {
+		if (!card_content || !card_background || !card_background_src) {
+			return;
+		}
 
-    if (
-        !card_content ||
-        !card_background ||
-        !card_background_src
-    ) {
-        return;
-    }
-
-
-    /*
+		/*
     |--------------------------------------------------------------------------
     | Clear Existing Tiles
     |--------------------------------------------------------------------------
     */
 
-    card_background.innerHTML = '';
+		card_background.innerHTML = "";
 
-
-    /*
+		/*
     |--------------------------------------------------------------------------
     | Determine Video Dimensions
     |--------------------------------------------------------------------------
     */
 
-    const sourceVideo =
-        document.createElement('video');
+		const sourceVideo = document.createElement("video");
 
+		sourceVideo.src = card_background_src;
 
-    sourceVideo.src =
-        card_background_src;
+		sourceVideo.preload = "metadata";
 
+		sourceVideo.muted = true;
 
-    sourceVideo.preload =
-        'metadata';
+		sourceVideo.playsInline = true;
 
+		sourceVideo.addEventListener("loadedmetadata", () => {
+			const videoWidth = sourceVideo.videoWidth;
 
-    sourceVideo.muted =
-        true;
+			const videoHeight = sourceVideo.videoHeight;
 
+			if (!videoWidth || !videoHeight) {
+				return;
+			}
 
-    sourceVideo.playsInline =
-        true;
-
-
-    sourceVideo.addEventListener(
-        'loadedmetadata',
-        () => {
-
-            const videoWidth =
-                sourceVideo.videoWidth;
-
-            const videoHeight =
-                sourceVideo.videoHeight;
-
-
-            if (
-                !videoWidth ||
-                !videoHeight
-            ) {
-                return;
-            }
-
-
-            /*
+			/*
             |--------------------------------------------------------------------------
             | Card Dimensions
             |--------------------------------------------------------------------------
             */
 
-            const cardWidth =
-                card_content.clientWidth;
+			const cardWidth = card_content.clientWidth;
 
+			const cardHeight = card_content.scrollHeight;
 
-            const cardHeight =
-                card_content.scrollHeight;
-
-
-            /*
+			/*
             |--------------------------------------------------------------------------
             | Calculate Tile Height
             |--------------------------------------------------------------------------
@@ -445,58 +514,37 @@ function createBackgroundVideoTiles() {
             |
             */
 
-            const scale =
-                cardWidth / videoWidth;
+			const scale = cardWidth / videoWidth;
 
+			const tileHeight = videoHeight * scale;
 
-            const tileHeight =
-                videoHeight * scale;
-
-
-            /*
+			/*
             |--------------------------------------------------------------------------
             | Calculate Tile Count
             |--------------------------------------------------------------------------
             */
 
-            const tileCount =
-                Math.ceil(
-                    cardHeight /
-                    tileHeight
-                );
+			const tileCount = Math.ceil(cardHeight / tileHeight);
 
-
-            /*
+			/*
             |--------------------------------------------------------------------------
             | Create Tiles
             |--------------------------------------------------------------------------
             */
 
-            for (
-                let index = 0;
-                index < tileCount;
-                index++
-            ) {
+			for (let index = 0; index < tileCount; index++) {
+				createBackgroundVideoTile(index * tileHeight, tileHeight);
+			}
+		});
+	}
 
-                createBackgroundVideoTile(
-                    index * tileHeight,
-                    tileHeight
-                );
-
-            }
-
-        }
-    );
-}
-
-
-/*
+	/*
 |--------------------------------------------------------------------------
 | Initialise Background
 |--------------------------------------------------------------------------
 */
 
-createBackgroundVideoTiles();
+	createBackgroundVideoTiles();
 
 	/*-- Card | Background | Music --*/
 
