@@ -79,163 +79,123 @@ document.addEventListener('DOMContentLoaded', () => {
 |--------------------------------------------------------------------------
 */
 
-	function initialiseCoverSleeves() {
-		if (!cover_sleeves) {
+function initialiseCoverSleeves() {
+	if (!cover_sleeves) {
+		return;
+	}
+
+	const sleeves = cover_sleeves.querySelectorAll(".sleeve");
+
+	if (!sleeves.length) {
+		return;
+	}
+
+	let initialised = false;
+
+	function calculateCover() {
+		if (initialised) {
 			return;
 		}
 
-		const sleeves = cover_sleeves.querySelectorAll(".sleeve");
+		cover_design_width = 0;
+		cover_design_height = 0;
 
-		if (!sleeves.length) {
-			return;
-		}
+		sleeves.forEach((sleeve) => {
+			let media_width = 0;
+			let media_height = 0;
 
-		/*
-    |--------------------------------------------------------------------------
-    | Wait Until Sleeve Media Is Ready
-    |--------------------------------------------------------------------------
-    */
+			if (sleeve.tagName === "VIDEO") {
+				media_width = sleeve.videoWidth;
+				media_height = sleeve.videoHeight;
+			} else {
+				media_width = sleeve.naturalWidth;
+				media_height = sleeve.naturalHeight;
+			}
 
-		function calculateCover() {
-			cover_design_width = 0;
-			cover_design_height = 0;
-
-			/*
-        |--------------------------------------------------------------------------
-        | Get Natural Dimensions
-        |--------------------------------------------------------------------------
-        */
-
-			sleeves.forEach((sleeve) => {
-				let media_width = 0;
-				let media_height = 0;
-
-				if (sleeve.tagName === "VIDEO") {
-					media_width = sleeve.videoWidth;
-					media_height = sleeve.videoHeight;
-				} else {
-					media_width = sleeve.naturalWidth;
-					media_height = sleeve.naturalHeight;
-				}
-
-				/*
-            |--------------------------------------------------------------------------
-            | Ignore Media That Is Not Ready
-            |--------------------------------------------------------------------------
-            */
-
-				if (!media_width || !media_height) {
-					return;
-				}
-
-				cover_design_width += media_width;
-
-				cover_design_height = Math.max(cover_design_height, media_height);
-			});
-
-			/*
-        |--------------------------------------------------------------------------
-        | Safety Check
-        |--------------------------------------------------------------------------
-        */
-
-			if (!cover_design_width || !cover_design_height) {
+			if (!media_width || !media_height) {
 				return;
 			}
 
-			/*
-        |--------------------------------------------------------------------------
-        | Capture Initial Viewport
-        |--------------------------------------------------------------------------
-        |
-        | IMPORTANT:
-        |
-        | These values are captured ONCE.
-        |
-        | We deliberately do not listen to resize events afterward.
-        |
-        */
+			cover_design_width += media_width;
 
-			const viewport_width = document.documentElement.clientWidth;
-
-			const viewport_height = window.innerHeight;
-
-			/*
-        |--------------------------------------------------------------------------
-        | Calculate Cover Scale
-        |--------------------------------------------------------------------------
-        |
-        | Mobile:
-        |
-        | The complete sleeve design fits the initial viewport height.
-        |
-        | Desktop:
-        |
-        | The complete sleeve design fits the initial viewport width.
-        |
-        */
-
-			if (viewport_width <= 768) {
-				cover_scale = viewport_height / cover_design_height;
-			} else {
-				cover_scale = viewport_width / cover_design_width;
-			}
-
-			/*
-        |--------------------------------------------------------------------------
-        | Store Scale
-        |--------------------------------------------------------------------------
-        */
-
-			cover_sleeves.style.setProperty("--cover-scale", cover_scale);
-
-			/*
-        |--------------------------------------------------------------------------
-        | Apply Scale
-        |--------------------------------------------------------------------------
-        */
-
-			cover_sleeves.style.transform = `translate(-50%, -50%) scale(${cover_scale})`;
-		}
-
-		/*
-    |--------------------------------------------------------------------------
-    | Check Media Readiness
-    |--------------------------------------------------------------------------
-    */
-
-		let media_ready = true;
-
-		sleeves.forEach((sleeve) => {
-			if (sleeve.tagName === "VIDEO") {
-				if (!sleeve.videoWidth || !sleeve.videoHeight) {
-					media_ready = false;
-
-					sleeve.addEventListener("loadedmetadata", calculateCover, {
-						once: true,
-					});
-				}
-			} else {
-				if (!sleeve.complete || !sleeve.naturalWidth || !sleeve.naturalHeight) {
-					media_ready = false;
-
-					sleeve.addEventListener("load", calculateCover, {
-						once: true,
-					});
-				}
-			}
+			cover_design_height = Math.max(cover_design_height, media_height);
 		});
 
-		/*
-    |--------------------------------------------------------------------------
-    | Calculate Immediately If Ready
-    |--------------------------------------------------------------------------
-    */
-
-		if (media_ready) {
-			calculateCover();
+		if (!cover_design_width || !cover_design_height) {
+			return;
 		}
+
+		/*
+		|--------------------------------------------------------------------------
+		| Initial viewport
+		|--------------------------------------------------------------------------
+		*/
+
+		const viewport_width = document.documentElement.clientWidth;
+
+		const viewport_height = window.innerHeight;
+
+		/*
+		|--------------------------------------------------------------------------
+		| Cover calculation
+		|--------------------------------------------------------------------------
+		*/
+
+		const scale_by_width = viewport_width / cover_design_width;
+
+		const scale_by_height = viewport_height / cover_design_height;
+
+		cover_scale = Math.max(scale_by_width, scale_by_height);
+
+		/*
+		|--------------------------------------------------------------------------
+		| Apply
+		|--------------------------------------------------------------------------
+		*/
+
+		cover_sleeves.style.setProperty("--cover-scale", cover_scale);
+
+		cover_sleeves.style.transform = `translate(-50%, -50%) scale(${cover_scale})`;
+
+		initialised = true;
 	}
+
+	/*
+	|--------------------------------------------------------------------------
+	| Check media readiness
+	|--------------------------------------------------------------------------
+	*/
+
+	let media_ready = true;
+
+	sleeves.forEach((sleeve) => {
+		if (sleeve.tagName === "VIDEO") {
+			if (!sleeve.videoWidth || !sleeve.videoHeight) {
+				media_ready = false;
+
+				sleeve.addEventListener("loadedmetadata", calculateCover, {
+					once: true,
+				});
+			}
+		} else {
+			if (!sleeve.complete || !sleeve.naturalWidth || !sleeve.naturalHeight) {
+				media_ready = false;
+
+				sleeve.addEventListener("load", calculateCover, { once: true });
+			}
+		}
+	});
+
+	/*
+	|--------------------------------------------------------------------------
+	| Calculate immediately if everything is ready
+	|--------------------------------------------------------------------------
+	*/
+
+	if (media_ready) {
+		calculateCover();
+	}
+}
 
 	/*
 |--------------------------------------------------------------------------
