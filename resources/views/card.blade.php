@@ -382,11 +382,16 @@
                                 </div>
                             </div>
                         </div>
-
+                        <!--
                         <button type="button" class="section-button" data-modal="live">
                             Tonton Live
                         </button>
-                        
+                        -->
+                    </div>
+                </section>
+
+                <section class="wedding-card-section">
+                    <div class="section-content">
                         <p>
                             Terima kasih diatas kehadiran Tuan/Puan yang telah menyerikan majlis perkahwinan ini, 
                             semoga kita semua diberkati Allah SWT.

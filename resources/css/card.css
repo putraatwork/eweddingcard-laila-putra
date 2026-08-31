@@ -639,7 +639,7 @@ body.invitation-opened .wedding-card {
 /* -- Card | Section | Gallery | Photo Stack -- */
 
 .photo-stack {
-    @apply relative w-[80%] aspect-[3/4] cursor-pointer;
+    @apply relative w-[80%] aspect-[3/4] cursor-pointer ;
 }
 
 
@@ -666,6 +666,10 @@ body.invitation-opened .wedding-card {
     will-change: transform;
     
     user-select: none;
+}
+
+.photo-card img {
+    @apply rounded-[5px];
 }
 
 
