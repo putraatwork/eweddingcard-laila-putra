@@ -285,143 +285,116 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	cover.addEventListener("click", openInvitation);
 
-	/*-- Card | Dimensions --*/
+	/*-- Card --*/
 
-function getWeddingCardMediaDimensions() {
-	if (!section_main_card) {
-		return null;
+	function initialiseWeddingCard() {
+		if (!wedding_card) {
+			return;
+		}
+
+		/*
+        |--------------------------------------------------------------------------
+        | Capture Initial Viewport
+        |--------------------------------------------------------------------------
+        */
+
+		const initialViewportWidth = document.documentElement.clientWidth;
+
+		const initialViewportHeight = window.innerHeight;
+
+		/*
+        |--------------------------------------------------------------------------
+        | Mobile
+        |--------------------------------------------------------------------------
+        |
+        | On mobile, the card follows the natural layout viewport width.
+        |
+        */
+
+		if (initialViewportWidth <= 768) {
+			wedding_card.style.width = `${initialViewportWidth}px`;
+
+			return;
+		}
+
+		/*
+        |--------------------------------------------------------------------------
+        | Desktop
+        |--------------------------------------------------------------------------
+        */
+
+		if (!section_main_card) {
+			return;
+		}
+
+		let mediaWidth;
+		let mediaHeight;
+
+		/*
+        |--------------------------------------------------------------------------
+        | Get Media Dimensions
+        |--------------------------------------------------------------------------
+        */
+
+		if (section_main_card.tagName === "VIDEO") {
+			mediaWidth = section_main_card.videoWidth;
+
+			mediaHeight = section_main_card.videoHeight;
+		} else {
+			mediaWidth = section_main_card.naturalWidth;
+
+			mediaHeight = section_main_card.naturalHeight;
+		}
+
+		/*
+        |--------------------------------------------------------------------------
+        | Media Not Ready
+        |--------------------------------------------------------------------------
+        */
+
+		if (!mediaWidth || !mediaHeight) {
+			return;
+		}
+
+		/*
+        |--------------------------------------------------------------------------
+        | Calculate Card Width
+        |--------------------------------------------------------------------------
+        */
+
+		const mediaRatio = mediaWidth / mediaHeight;
+
+		const cardWidth = initialViewportHeight * mediaRatio;
+
+		wedding_card.style.width = `${cardWidth}px`;
 	}
-
-	let width = 0;
-	let height = 0;
-
-	if (section_main_card.tagName === "VIDEO") {
-		width = section_main_card.videoWidth;
-		height = section_main_card.videoHeight;
-	} else {
-		width = section_main_card.naturalWidth;
-		height = section_main_card.naturalHeight;
-	}
-
-	if (!width || !height) {
-		return null;
-	}
-
-	return {
-		width,
-		height,
-	};
-}
-
-/*-- Card | Width --*/
-
-function initialiseWeddingCard() {
-	if (!wedding_card) {
-		return;
-	}
-
-	const viewportWidth = document.documentElement.clientWidth;
 
 	/*
-	|--------------------------------------------------------------------------
-	| Mobile
-	|--------------------------------------------------------------------------
-	|
-	| The wedding card follows the viewport width.
-	|
-	*/
+    |--------------------------------------------------------------------------
+    | Initialise Once
+    |--------------------------------------------------------------------------
+    */
 
-	if (viewportWidth <= 768) {
-		wedding_card.style.width = `${viewportWidth}px`;
-
-		return;
-	}
-
-	/*
-	|--------------------------------------------------------------------------
-	| Desktop
-	|--------------------------------------------------------------------------
-	*/
-
-	const media = getWeddingCardMediaDimensions();
-
-	if (!media) {
-		return;
-	}
-
-	const viewportHeight = window.innerHeight;
-
-	const mediaRatio = media.width / media.height;
-
-	const cardWidth = viewportHeight * mediaRatio;
-
-	wedding_card.style.width = `${cardWidth}px`;
-}
-
-/*-- Card | Floating UI --*/
-
-function syncFloatingUIWidth() {
-	if (!wedding_card) {
-		return;
-	}
-
-	const cardWidth = wedding_card.getBoundingClientRect().width;
-
-	if (!cardWidth) {
-		return;
-	}
-
-	document.documentElement.style.setProperty(
-		"--wedding-card-width",
-		`${cardWidth}px`
-	);
-}
-
-/*-- Card | Initialise --*/
-
-function initialiseCardDimensions() {
 	initialiseWeddingCard();
 
-	syncFloatingUIWidth();
-}
+	/*-- Card | Navbar --*/
 
-initialiseCardDimensions();
+	function syncFloatingUIWidth() {
+		if (!wedding_card) {
+			return;
+		}
 
-/*
-|--------------------------------------------------------------------------
-| Wait For Main Card Media
-|--------------------------------------------------------------------------
-*/
+		const cardWidth = wedding_card.getBoundingClientRect().width;
 
-if (section_main_card) {
-	if (section_main_card.tagName === "VIDEO") {
-		section_main_card.addEventListener(
-			"loadedmetadata",
-			initialiseCardDimensions,
-			{ once: true }
-		);
-	} else if (!section_main_card.complete) {
-		section_main_card.addEventListener(
-			"load",
-			initialiseCardDimensions,
-			{ once: true }
+		document.documentElement.style.setProperty(
+			"--wedding-card-width",
+			`${cardWidth}px`
 		);
 	}
-}
 
-/*
-|--------------------------------------------------------------------------
-| Resize
-|--------------------------------------------------------------------------
-|
-| We recalculate the card width and floating UI position when the
-| viewport changes.
-|
-*/
+	syncFloatingUIWidth();
 
-window.addEventListener("resize", () => {
-	initialiseCardDimensions();
-});
+	window.addEventListener("resize", syncFloatingUIWidth);
 
 	/*-- Card | Background --*/
 
@@ -1622,7 +1595,9 @@ window.addEventListener("resize", () => {
             |--------------------------------------------------------------------------
             */
 
-			createIcons({ icons });
+			if (typeof lucide !== "undefined") {
+				lucide.createIcons();
+			}
 		});
 
 		/*
@@ -1757,7 +1732,9 @@ window.addEventListener("resize", () => {
 
                     `;
 
-					createIcons({ icons });
+					if (typeof lucide !== "undefined") {
+						lucide.createIcons();
+					}
 				}
 			}
 		});
@@ -1840,7 +1817,9 @@ window.addEventListener("resize", () => {
     |--------------------------------------------------------------------------
     */
 
-    createIcons({ icons });
+		if (typeof lucide !== "undefined") {
+			lucide.createIcons();
+		}
 
 		/*
     |--------------------------------------------------------------------------
@@ -2168,7 +2147,9 @@ window.addEventListener("resize", () => {
                     |----------------------------------------------------------------
                     */
 
-					createIcons({ icons });
+					if (typeof lucide !== "undefined") {
+						lucide.createIcons();
+					}
 				}
 			}
 		});
@@ -2251,7 +2232,9 @@ window.addEventListener("resize", () => {
     |--------------------------------------------------------------------------
     */
 
-    createIcons({ icons });
+		if (typeof lucide !== "undefined") {
+			lucide.createIcons();
+		}
 
 		/*
     |--------------------------------------------------------------------------
