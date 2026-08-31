@@ -58,7 +58,7 @@
                         <div class="invitation-names">
                             <div class="invitation-name">
                                 <p class="name">
-                                    Mohd Zaki Bin Harun
+                                    Hj Mohd Zaki Bin Harun
                                 </p>
 
                                 <p class="relation">
@@ -74,7 +74,7 @@
 
                             <div class="invitation-name">
                                 <p class="name">
-                                    Zainab Binti Mat Ghani
+                                    Hjh Zainab Binti Mat Ghani
                                 </p>
 
                                 <p class="relation">
@@ -425,9 +425,9 @@
             <small>RSVP</small>
         </button>
     
-        <button type="button" data-modal="salam-kaut">
-            <i data-lucide="heart-handshake"></i>
-            <small>Salam Kaut</small>
+        <button type="button" data-modal="guestbook">
+            <i data-lucide="message-square-heart"></i>
+            <small>Ucapan</small>
         </button>
     </nav>
 
