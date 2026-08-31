@@ -263,111 +263,240 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	/*-- Card | Background --*/
 
-	const BACKGROUND_TILE_OVERLAP = 2;
+/*
+|--------------------------------------------------------------------------
+| Background Video Configuration
+|--------------------------------------------------------------------------
+*/
 
-	function createBackgroundVideoTile(top, height) {
-		const tile = document.createElement("div");
+const BACKGROUND_TILE_OVERLAP = 2;
 
-		tile.className = "card-background-tile";
-		tile.style.top = `${top}px`;
-		tile.style.height = `${height + BACKGROUND_TILE_OVERLAP}px`;
 
-		const video = document.createElement("video");
+/*
+|--------------------------------------------------------------------------
+| Create Background Video Tile
+|--------------------------------------------------------------------------
+*/
 
-		video.src = card_background_src;
-		video.autoplay = true;
-		video.loop = true;
-		video.muted = true;
-		video.playsInline = true;
-		video.preload = "auto";
+function createBackgroundVideoTile(
+    top,
+    height
+) {
 
-		video.setAttribute("aria-hidden", "true");
-		tile.appendChild(video);
+    const tile =
+        document.createElement('div');
 
-		card_background.appendChild(tile);
 
-		video.play().catch(() => {
-			// Browser may delay autoplay until interaction.
-		});
+    tile.className =
+        'card-background-tile';
 
-		return tile;
-	}
 
-	/*-- Card | Background | Tiles --*/
+    tile.style.top =
+        `${top}px`;
 
-	/*
+
+    tile.style.height =
+        `${height + BACKGROUND_TILE_OVERLAP}px`;
+
+
+    const video =
+        document.createElement('video');
+
+
+    video.src =
+        card_background_src;
+
+
+    video.autoplay =
+        true;
+
+    video.loop =
+        true;
+
+    video.muted =
+        true;
+
+    video.playsInline =
+        true;
+
+    video.preload =
+        'auto';
+
+
+    video.setAttribute(
+        'aria-hidden',
+        'true'
+    );
+
+
+    tile.appendChild(
+        video
+    );
+
+
+    card_background.appendChild(
+        tile
+    );
+
+
+    video.play().catch(() => {
+        /*
+        | Browser may delay autoplay until interaction.
+        */
+    });
+
+
+    return tile;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Create Background Video Tiles
+|--------------------------------------------------------------------------
+*/
+
+function createBackgroundVideoTiles() {
+
+    if (
+        !card_content ||
+        !card_background ||
+        !card_background_src
+    ) {
+        return;
+    }
+
+
+    /*
     |--------------------------------------------------------------------------
-    | Capture Initial Viewport Height
+    | Clear Existing Tiles
     |--------------------------------------------------------------------------
-    |
-    | Mobile browsers can change window.innerHeight while scrolling because
-    | the browser address bar expands and collapses.
-    |
-    | We intentionally capture the height only once.
-    |
     */
 
-	const backgroundTileHeight = window.innerHeight;
+    card_background.innerHTML = '';
 
-	/*
+
+    /*
     |--------------------------------------------------------------------------
-    | Create Background Video Tiles
+    | Determine Video Dimensions
     |--------------------------------------------------------------------------
     */
 
-	function createBackgroundVideoTiles() {
-		if (!card_content || !card_background) {
-			return;
-		}
+    const sourceVideo =
+        document.createElement('video');
 
-		/*
-        |--------------------------------------------------------------------------
-        | Clear Existing Tiles
-        |--------------------------------------------------------------------------
-        */
 
-		card_background.innerHTML = "";
+    sourceVideo.src =
+        card_background_src;
 
-		/*
-        |--------------------------------------------------------------------------
-        | Calculate Card Height
-        |--------------------------------------------------------------------------
-        */
 
-		const cardHeight = card_content.scrollHeight;
+    sourceVideo.preload =
+        'metadata';
 
-		/*
-        |--------------------------------------------------------------------------
-        | Calculate Number Of Tiles
-        |--------------------------------------------------------------------------
-        */
 
-		const tileCount = Math.ceil(cardHeight / backgroundTileHeight);
+    sourceVideo.muted =
+        true;
 
-		/*
-        |--------------------------------------------------------------------------
-        | Create Tiles
-        |--------------------------------------------------------------------------
-        */
 
-		for (let index = 0; index < tileCount; index++) {
-			createBackgroundVideoTile(
-				index * backgroundTileHeight,
-				backgroundTileHeight
-			);
-		}
-	}
+    sourceVideo.playsInline =
+        true;
 
-	/*
-    |--------------------------------------------------------------------------
-    | Initialise Background
-    |--------------------------------------------------------------------------
-    |
-    | This runs once only.
-    |
-    */
 
-	createBackgroundVideoTiles();
+    sourceVideo.addEventListener(
+        'loadedmetadata',
+        () => {
+
+            const videoWidth =
+                sourceVideo.videoWidth;
+
+            const videoHeight =
+                sourceVideo.videoHeight;
+
+
+            if (
+                !videoWidth ||
+                !videoHeight
+            ) {
+                return;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Card Dimensions
+            |--------------------------------------------------------------------------
+            */
+
+            const cardWidth =
+                card_content.clientWidth;
+
+
+            const cardHeight =
+                card_content.scrollHeight;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Calculate Tile Height
+            |--------------------------------------------------------------------------
+            |
+            | Scale the video proportionally so that its width matches
+            | the card width.
+            |
+            */
+
+            const scale =
+                cardWidth / videoWidth;
+
+
+            const tileHeight =
+                videoHeight * scale;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Calculate Tile Count
+            |--------------------------------------------------------------------------
+            */
+
+            const tileCount =
+                Math.ceil(
+                    cardHeight /
+                    tileHeight
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create Tiles
+            |--------------------------------------------------------------------------
+            */
+
+            for (
+                let index = 0;
+                index < tileCount;
+                index++
+            ) {
+
+                createBackgroundVideoTile(
+                    index * tileHeight,
+                    tileHeight
+                );
+
+            }
+
+        }
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Initialise Background
+|--------------------------------------------------------------------------
+*/
+
+createBackgroundVideoTiles();
 
 	/*-- Card | Background | Music --*/
 
@@ -1400,8 +1529,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 `;
 			} else {
-
-			/*
+				/*
             |--------------------------------------------------------------------------
             | Tidak Hadir
             |--------------------------------------------------------------------------

@@ -287,23 +287,25 @@ body.invitation-opened .wedding-card {
 
 /* -- Card | Background -- */
 
+/* -- Card | Background -- */
+
 .card-background {
     @apply absolute inset-0 z-0 h-full w-full overflow-hidden;
 
     pointer-events: none;
 }
 
+
 .card-background-tile {
     @apply absolute left-0 w-full overflow-hidden;
 
     transform: translateZ(0);
     backface-visibility: hidden;
-    will-change: transform;
 }
 
-.card-background-tile video,
-.card-background-tile img {
-    @apply block h-full w-full m-0 p-0 object-cover;
+
+.card-background-tile video {
+    @apply block w-full h-full m-0 p-0 object-cover;
 
     transform: translateZ(0);
     backface-visibility: hidden;
